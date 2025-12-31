@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartBudget - Expense Tracker & Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="shortcut icon" href="images/modern-composition-indian-rupees.png" type="image/x-icon">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen">
+
+<div class="max-w-6xl mx-auto p-4 md:p-8">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-chart-pie text-blue-600"></i> SmartBudget
+            </h1>
+            <p class="text-slate-500 text-sm">Real-time expense tracking and visual analytics.</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="exportData()" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors flex items-center gap-2">
+                <i class="fa-solid fa-download"></i> Export CSV
+            </button>
+            <button onclick="resetData()" class="px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors">
+                Reset
+            </button>
+        </div>
+    </header>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="glass-card p-6 rounded-2xl shadow-sm border-l-4 border-emerald-500">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-emerald-100 text-emerald-600 rounded-xl">
+                    <i class="fa-solid fa-wallet text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Total Income</p>
+                    <h3 id="stat-income" class="text-2xl font-bold">₹0.00</h3>
+                </div>
+            </div>
+        </div>
+        <div class="glass-card p-6 rounded-2xl shadow-sm border-l-4 border-rose-500">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-rose-100 text-rose-600 rounded-xl">
+                    <i class="fa-solid fa-credit-card text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Total Expenses</p>
+                    <h3 id="stat-expenses" class="text-2xl font-bold">₹0.00</h3>
+                </div>
+            </div>
+        </div>
+        <div class="glass-card p-6 rounded-2xl shadow-sm border-l-4 border-blue-500">
+            <div class="flex items-center gap-4">
+                <div class="p-3 bg-blue-100 text-blue-600 rounded-xl">
+                    <i class="fa-solid fa-piggy-bank text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-500 font-semibold uppercase tracking-wider">Net Balance</p>
+                    <h3 id="stat-balance" class="text-2xl font-bold">₹0.00</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Sidebar: Entry Form & Budget -->
+        <div class="lg:col-span-4 space-y-6">
+            <!-- Transaction Form -->
+            <div class="glass-card p-6 rounded-2xl shadow-sm">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle text-blue-500"></i> New Entry
+                </h2>
+                <form id="transaction-form" class="space-y-4">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Description</label>
+                        <input type="text" id="desc" required placeholder="Rent, Coffee, Bonus..."
+                               class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Amount (₹)</label>
+                            <input type="number" id="amount" required step="0.01" placeholder="0.00"
+                                   class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all text-lg font-semibold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Type</label>
+                            <select id="type" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                                <option value="expense">Expense</option>
+                                <option value="income">Income</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Category</label>
+                        <select id="category" class="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                            <option value="Housing">Housing</option>
+                            <option value="Food">Food</option>
+                            <option value="Transportation">Transportation</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Shopping">Shopping</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Salary">Salary/Income</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-200 active:scale-[0.98] transition-all">
+                        Add Transaction
+                    </button>
+                </form>
+            </div>
+
+            <!-- Budget Progress -->
+            <div class="glass-card p-6 rounded-2xl shadow-sm">
+                <h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-bullseye text-orange-500"></i> Budget Limits
+                </h2>
+                <div id="budget-list" class="space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- Main Content: Chart & History -->
+        <div class="lg:col-span-8 space-y-6">
+            <!-- Analytics Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-card p-6 rounded-2xl shadow-sm flex flex-col items-center">
+                    <h2 class="text-lg font-bold self-start mb-2">Spending Breakdown</h2>
+                    <div class="w-full max-w-[240px] aspect-square relative">
+                        <canvas id="expenseChart"></canvas>
+                    </div>
+                </div>
+                <div class="glass-card p-6 rounded-2xl shadow-sm flex flex-col justify-center">
+                    <h2 class="text-lg font-bold mb-4">Quick Analysis</h2>
+                    <div id="quick-insight" class="space-y-3 text-sm text-slate-600">
+                        <!-- Insights generated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- History Table -->
+            <div class="glass-card p-6 rounded-2xl shadow-sm">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-lg font-bold">Recent History</h2>
+                    <select id="filter-category" onchange="updateUI()" class="text-xs bg-slate-100 border-none rounded-md px-3 py-1 outline-none font-medium">
+                        <option value="all">All Categories</option>
+                        <option value="Housing">Housing</option>
+                        <option value="Food">Food</option>
+                        <option value="Transportation">Transportation</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Utilities">Utilities</option>
+                        <option value="Salary">Salary</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="overflow-y-auto custom-scrollbar max-h-[400px]">
+                    <table class="w-full">
+                        <thead class="sticky top-0 bg-white/80 backdrop-blur-sm">
+                        <tr>
+                            <th class="pb-4 text-[10px] font-bold text-slate-400 uppercase text-left">Date</th>
+                            <th class="pb-4 text-[10px] font-bold text-slate-400 uppercase text-left">Description</th>
+                            <th class="pb-4 text-[10px] font-bold text-slate-400 uppercase text-left">Category</th>
+                            <th class="pb-4 text-[10px] font-bold text-slate-400 uppercase text-right">Amount</th>
+                            <th class="pb-4 text-[10px] font-bold text-slate-400 uppercase text-right"></th>
+                        </tr>
+                        </thead>
+                        <tbody id="history-body" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                    <div id="empty-state" class="hidden flex flex-col items-center justify-center py-10 text-slate-300">
+                        <i class="fa-solid fa-receipt text-4xl mb-2 opacity-30"></i>
+                        <p class="text-sm">No transactions found</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast" class="fixed bottom-8 right-8 px-6 py-3 bg-slate-800 text-white rounded-xl shadow-2xl transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none z-50"></div>
+
+<script src="index.js"></script>
+</body>
+</html>
